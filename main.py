@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+main = FastAPI()
 
 # Temporary storage for last received text
 last_text = {
