@@ -7,7 +7,8 @@ app = FastAPI()
 # Read API key from environment variable
 API_KEY = os.getenv("API_KEY")
 
-def verify_api_key(x_api_key: str = Header(...)):
+def verify_api_key(x_api_key: str = Header(None)):
+    # Return generic 401 Unauthorized if missing or incorrect
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
