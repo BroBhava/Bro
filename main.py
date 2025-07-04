@@ -17,6 +17,11 @@ class TextOut(BaseModel):
     content: str
     source: str
 
+# Root endpoint for health check or welcome message
+@app.get("/")
+async def root():
+    return {"message": "Hello, FastAPI is running!"}
+
 # STT endpoint - receive text from Unity
 @app.post("/stt", response_model=TextOut)
 async def receive_undertone(text: TextIn):
