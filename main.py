@@ -1,9 +1,16 @@
-from fastapi import FastAPI, HTTPException
+import os
+from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel
 
 app = FastAPI()
 
-# Temporary storage for last received text
+# Read API key from environment variable
+API_KEY = os.getenv("API_KEY")
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
 last_text = {
     "content": None,
     "source": None
@@ -17,21 +24,18 @@ class TextOut(BaseModel):
     content: str
     source: str
 
-# Root endpoint for health check or welcome message
 @app.get("/")
 async def root():
     return {"message": "Hello, FastAPI is running!"}
 
-# STT endpoint - receive text from Unity
-@app.post("/stt", response_model=TextOut)
+@app.post("/stt", response_model=TextOut, dependencies=[Depends(verify_api_key)])
 async def receive_undertone(text: TextIn):
     last_text["content"] = text.content
     last_text["source"] = text.source
     print(f"Received STT (undertone): {text.content}")
     return text
 
-# TTS endpoint - send last received text to Unity
-@app.get("/tts", response_model=TextOut)
+@app.get("/tts", response_model=TextOut, dependencies=[Depends(verify_api_key)])
 async def get_overtone():
     if last_text["content"]:
         return TextOut(**last_text)
