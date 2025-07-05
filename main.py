@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, HTTPException, Header, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -8,7 +8,6 @@ app = FastAPI()
 API_KEY = os.getenv("API_KEY")
 
 def verify_api_key(x_api_key: str = Header(None)):
-    # Return generic 401 Unauthorized if missing or incorrect
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -17,10 +16,16 @@ last_text = {
     "source": None
 }
 
+# Input model with alias for "text-to-translate"
 class TextIn(BaseModel):
-    content: str
+    content: str = Field(..., alias="text-to-translate")
     source: str = "undertone"
 
+    class Config:
+        allow_population_by_field_name = True
+        allow_population_by_alias = True  # Optional: lets FastAPI display alias in docs
+
+# Output model remains the same
 class TextOut(BaseModel):
     content: str
     source: str
@@ -34,7 +39,7 @@ async def receive_undertone(text: TextIn):
     last_text["content"] = text.content
     last_text["source"] = text.source
     print(f"Received STT (undertone): {text.content}")
-    return text
+    return TextOut(content=text.content, source=text.source)
 
 @app.get("/tts", response_model=TextOut, dependencies=[Depends(verify_api_key)])
 async def get_overtone():
